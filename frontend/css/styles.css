@@ -463,9 +463,10 @@ iframe.graph-big { border: 1px solid var(--line); background: #fff; }
 /* Auto Detective banner */
 /* Blue circular "bark" speaker button next to Pinky (Google-style) */
 .bark-btn {
+  position: absolute; top: 12px; left: 12px; z-index: 3;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; margin-left: 8px; vertical-align: middle;
-  border: none; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 1;
+  width: 36px; height: 36px;
+  border: none; border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1;
   color: #fff; background: #1a73e8; box-shadow: 0 2px 8px rgba(26,115,232,0.5);
   transition: transform .12s var(--ease), box-shadow .18s, background .18s;
 }
