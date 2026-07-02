@@ -11,11 +11,24 @@ const PERSONA_META = {
 
 const C = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
-/* Pinky's bark — synthesized with Web Audio (no audio file needed).
-   A "woof" = a quick pitch-dropping tone through a lowpass + short noise burst,
-   with a fast attack/decay envelope. We play two woofs. */
-let _barkCtx = null;
+/* Pinky's bark — plays the real recorded clip; falls back to a Web Audio
+   synth if the file can't load. */
+const BARK_URL = "/media/audio/Pinky%20Bark/Pinky_Barking.wav";
+let _barkAudio = null;
 function playBark() {
+  try {
+    _barkAudio = _barkAudio || new Audio(BARK_URL);
+    _barkAudio.currentTime = 0;
+    const p = _barkAudio.play();
+    if (p && p.catch) p.catch(() => _synthBark());
+  } catch (e) {
+    _synthBark();
+  }
+}
+
+/* Fallback: synthesize a "woof" with Web Audio (no file needed). */
+let _barkCtx = null;
+function _synthBark() {
   try {
     _barkCtx = _barkCtx || new (window.AudioContext || window.webkitAudioContext)();
     const ctx = _barkCtx;
