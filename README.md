@@ -2,14 +2,13 @@
 
 > **"Build AI that doesn't forget."** — Cognee × WeMakeDevs Hackathon · **Team Cloud Sailor**
 
-## 🎬 The trailer
+## 🎬 Watch the trailer
 
-![Wolfpack Recall — animated preview](media/demo/wolfpack_demo.gif)
+[![Wolfpack Recall — watch the trailer on YouTube](https://img.youtube.com/vi/k0fobTzngVk/maxresdefault.jpg)](https://www.youtube.com/watch?v=k0fobTzngVk)
 
-**▶ [Watch the full 50-second trailer *with narration/sound*](media/demo/wolfpack_demo.mp4)**
-(click **View raw** / download to play) — the story reunion → the founder's Mr. Chow
-cameo → the tattooed code → the dog-show win → the live Cognee graph. For the full
-interactive experience, open the live app below.
+**▶ [Watch the trailer on YouTube](https://www.youtube.com/watch?v=k0fobTzngVk)** — the
+story in ~50s (reunion → the founder's Mr. Chow cameo → the tattooed code → the dog-show
+win → the live Cognee graph). For the full interactive experience, open the live app below.
 
 ## ▶️ Try it live (no setup)
 
@@ -35,7 +34,7 @@ public HF Space is briefly rate-limited, the app degrades gracefully; nothing bl
 
 Four friends wake up in a trashed Berlin apartment with **no memory** of last night.
 Their dog **Pinky** is gone — and the code to a locker at the **Karlovci Gymnasium in
-Sremski Karlovci, Serbia** is tattooed on her belly. Using **Cognee** as the brain,
+Sremski Karlovci, Serbia. **Pinky the dog has a tattoo on her belly with the code information. Using **Cognee** as the brain,
 four AI personalities reconstruct the night, recover Pinky, crack the code, get inside,
 and win the dog show.
 
