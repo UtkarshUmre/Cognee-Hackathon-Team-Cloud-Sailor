@@ -11,6 +11,52 @@ const PERSONA_META = {
 
 const C = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
+/* Pinky's bark — synthesized with Web Audio (no audio file needed).
+   A "woof" = a quick pitch-dropping tone through a lowpass + short noise burst,
+   with a fast attack/decay envelope. We play two woofs. */
+let _barkCtx = null;
+function playBark() {
+  try {
+    _barkCtx = _barkCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _barkCtx;
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+
+    const woof = (t0, startHz, endHz) => {
+      // voiced part: sawtooth gliding down (the "aw" of a woof)
+      const osc = ctx.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(startHz, t0);
+      osc.frequency.exponentialRampToValueAtTime(endHz, t0 + 0.16);
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.setValueAtTime(1600, t0);
+      lp.frequency.exponentialRampToValueAtTime(700, t0 + 0.18);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.7, t0 + 0.015);   // sharp attack
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22); // quick decay
+      osc.connect(lp).connect(g).connect(ctx.destination);
+      osc.start(t0); osc.stop(t0 + 0.24);
+
+      // noise transient at the front (the "consonant" bite of the bark)
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+      const noise = ctx.createBufferSource();
+      noise.buffer = buf;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.25, t0);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.05);
+      noise.connect(ng).connect(ctx.destination);
+      noise.start(t0);
+    };
+
+    woof(now, 420, 150);          // first bark
+    woof(now + 0.26, 460, 160);   // second bark, slightly higher
+  } catch (e) { /* audio not available — ignore */ }
+}
+
 /* ============================ CLUES ============================ */
 // Every clue is a real, dynamic node under Pinky — nothing is hard-coded.
 // State drives its colour: pending (amber) -> true (green) / false (red).
@@ -446,6 +492,16 @@ async function autoDetective() {
 
 /* ====================== WIRE-UP ====================== */
 document.getElementById("auto-detective").addEventListener("click", autoDetective);
+(function wireBark() {
+  const b = document.getElementById("pinky-bark");
+  if (!b) return;
+  b.addEventListener("click", () => {
+    playBark();
+    b.classList.remove("barking");
+    void b.offsetWidth;          // restart the pulse animation
+    b.classList.add("barking");
+  });
+})();
 $("#add-clue").addEventListener("click", () => {
   addClue($("#clue-text").value, $("#clue-nodeset").value);
   $("#clue-text").value = "";
