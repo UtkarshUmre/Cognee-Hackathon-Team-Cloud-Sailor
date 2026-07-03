@@ -82,6 +82,24 @@ Most teams call `add()` + one search. We exercise Cognee deeply:
 
 See **`docs/COGNEE_SHOWCASE.md`** for the full mapping and pitch walkthrough.
 
+### 🔄 How a clue flows through the investigation (Page 2)
+
+Each piece of evidence travels the same pipeline — from raw case file, into Cognee's
+memory graph, back out through the AI agents, and onto the screen:
+
+| Stage | What it does |
+|-------|--------------|
+| **`seed_clues.json`** | Holds the original case evidence — the starting clue pack. |
+| **Evidence Locker** (UI) | Lets users add new clues during the investigation. |
+| **Cognee `remember()`** | Sends each clue into Cognee memory (ingest). |
+| **Cognee `cognify` pipeline** | Processes the clues into a queryable knowledge-graph memory. |
+| **Cognee `recall()` / `GRAPH_COMPLETION`** | Retrieves connected evidence back out of the memory graph. |
+| **Wolfpack AI agents** | The 4 personas reason over the recalled Cognee evidence. |
+| **Investigation page** (UI) | Displays recalled evidence, agent responses, clue status (✓/✗), and storyline progress. |
+
+**In one line:** `seed_clues.json` + user input → `remember()` → `cognify` →
+`recall()` / `GRAPH_COMPLETION` → Wolfpack agents → the investigation UI.
+
 ---
 
 ## 🤖 Models & AI services used
