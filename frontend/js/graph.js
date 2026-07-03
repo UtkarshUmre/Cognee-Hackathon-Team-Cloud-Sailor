@@ -131,7 +131,7 @@ function openAsk(open) {
   document.getElementById("ask-toggle").classList.toggle("hidden", open);
   if (open && !askGreeted) {
     askGreeted = true;
-    askBubble("Hi! I'm the Cognee Guide. Ask me anything about Cognee, or tell me where you're stuck and I'll walk you through it. Want deeper answers? Tap “Enable free AI (Puter)” below — it's free.", "bot");
+    askBubble("Hi! I'm the Cognee Guide — free, no login. Ask me anything about Cognee, or tell me where you're stuck and I'll walk you through it. Want deeper answers? Tap “Enable free AI (Puter)” below — it's free, though Puter asks for a quick, free one-time sign-in.", "bot");
   }
 }
 /* Built-in Cognee guide — a keyword-matched help assistant. No external AI, no
