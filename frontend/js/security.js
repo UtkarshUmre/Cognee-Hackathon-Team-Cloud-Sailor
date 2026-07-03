@@ -241,6 +241,16 @@ $("#scan").addEventListener("click", scanToEnter);
 $("#code-check").addEventListener("click", checkCode);
 $("#code-input").addEventListener("keydown", (e) => { if (e.key === "Enter") checkCode(); });
 $("#fc-say").addEventListener("click", chowSays);
+
+/* Pinky's reunion video: play her bark automatically when the video starts. */
+(function wireReunionBark() {
+  const vid = document.getElementById("reunion-vid");
+  if (!vid) return;
+  const bark = new Audio("/media/audio/Pinky%20Bark/Pinky_Barking.wav");
+  vid.addEventListener("play", () => {
+    try { bark.currentTime = 0; bark.play().catch(() => {}); } catch {}
+  });
+})();
 $("#fc-select").addEventListener("change", (e) => {
   const i = e.target.value;
   if (i !== "" && sayClips) playChow(sayClips[Number(i)]);
