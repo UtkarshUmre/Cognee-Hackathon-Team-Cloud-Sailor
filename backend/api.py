@@ -260,6 +260,19 @@ def cameo_videos_generate() -> dict:
     return {"started": False, "disabled": True, "count": len(video_gen.list_videos())}
 
 
+# Only the project's own memory graphs show in the Page-5 dataset picker. This
+# hides Cognee's default/plumbing datasets (default_dataset, agent_sessions) and
+# early throwaways (hackathon_demo) without deleting anything on Cognee Cloud.
+# Listed in the order we want them to appear (the stars first).
+DATASET_ALLOWLIST = [
+    "pinky_serbia",           # the live case memory (default)
+    "mr_chow",                # the Mr. Chow character graph
+    "pinky_case",             # earlier case memory
+    "cloud_sailor_memory",    # team memory
+    "sailor_test_1782698480",  # kept per request
+]
+
+
 @app.get("/cognee/datasets")
 def cognee_datasets() -> dict:
     """List the datasets (memory graphs) on the tenant, for the graph explorer."""
@@ -268,12 +281,16 @@ def cognee_datasets() -> dict:
         _, rows = client._request("GET", "/api/v1/datasets", timeout=15)
     except CogneeError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
-    import re
-    uuid_re = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-", re.I)
-    items = [
-        {"name": d.get("name"), "id": d.get("id") or d.get("dataset_id")}
+    by_name = {
+        d.get("name"): (d.get("id") or d.get("dataset_id"))
         for d in (rows or [])
-        if isinstance(d, dict) and d.get("name") and not uuid_re.match(str(d.get("name")))
+        if isinstance(d, dict) and d.get("name")
+    }
+    # Curated, ordered list — only project datasets that actually exist on the tenant.
+    items = [
+        {"name": name, "id": by_name[name]}
+        for name in DATASET_ALLOWLIST
+        if name in by_name
     ]
     return {"default": client.dataset, "datasets": items}
 
