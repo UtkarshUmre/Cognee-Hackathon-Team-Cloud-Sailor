@@ -319,32 +319,17 @@ def _dark_schema(html: str) -> str:
     return html.replace("</head>", inject + "</head>", 1)
 
 
-# On phones the Cognee node-detail panel (#info-panel / #schema-side-panel) covered
-# most of the graph. This makes it a BOTTOM SHEET: when you tap a node the card slides
-# up from the bottom (the graph stays visible above), stays open, and scrolls inside
-# itself with a visible scrollbar on the right. Dismiss with Cognee's own ✕.
+# On phones we mirror the node-detail panel OUT of the graph into a card BELOW it
+# (see graph.js). So here we just push the in-iframe panel off-screen on mobile — it
+# stays rendered (so its content is readable/mirrorable and Cognee's show/hide still
+# works) but never overlays the graph. Desktop keeps the panel as-is.
 _MOBILE_PANEL_INJECT = """
 <style>
 @media (max-width: 760px) {
   #info-panel, #schema-side-panel {
-    position: fixed !important;
-    left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important;
-    width: 100vw !important; max-width: 100vw !important;
-    height: 52vh !important; max-height: 52vh !important;
-    border-radius: 16px 16px 0 0 !important;
-    overflow-y: auto !important; -webkit-overflow-scrolling: touch;
-    box-shadow: 0 -12px 34px rgba(0,0,0,0.55) !important;
-    z-index: 2000 !important;
-    padding-bottom: 24px !important;
-    scrollbar-width: thin; scrollbar-color: #ff3d8b transparent;
-  }
-  /* keep the scrollbar always visible on the right so it's obviously scrollable */
-  #info-panel::-webkit-scrollbar, #schema-side-panel::-webkit-scrollbar { width: 9px; }
-  #info-panel::-webkit-scrollbar-thumb, #schema-side-panel::-webkit-scrollbar-thumb {
-    background: #ff3d8b; border-radius: 5px; border: 2px solid rgba(0,0,0,0.2);
-  }
-  #info-panel::-webkit-scrollbar-track, #schema-side-panel::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.06);
+    left: -10000px !important; right: auto !important; top: 0 !important; bottom: auto !important;
+    transform: none !important; box-shadow: none !important; pointer-events: none !important;
+    opacity: 1 !important;
   }
 }
 </style>

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/styles.css?v=13" />
+  <link rel="stylesheet" href="/css/styles.css?v=14" />
   <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
@@ -50,6 +50,10 @@
       <iframe id="brain-frame" class="explorer-graph" title="Cognee knowledge graph" loading="lazy"></iframe>
       <div id="graph" class="explorer-graph hidden"></div>
     </div>
+
+    <!-- Mobile: the selected node's details, mirrored out of the graph into a card
+         BELOW it so it doesn't cover the graph (populated by graph.js). -->
+    <section id="node-card" class="node-card hidden" aria-live="polite"></section>
 
     <!-- Cognee explainer overlay -->
     <div id="about-overlay" class="about-overlay">
@@ -105,8 +109,8 @@
     </div>
   </section>
 
-  <script src="/js/common.js?v=13"></script>
-  <script src="/js/cameo.js?v=13"></script>
-  <script src="/js/graph.js?v=13"></script>
+  <script src="/js/common.js?v=14"></script>
+  <script src="/js/cameo.js?v=14"></script>
+  <script src="/js/graph.js?v=14"></script>
 </body>
 </html>

@@ -504,7 +504,7 @@ document.getElementById("auto-detective").addEventListener("click", autoDetectiv
    Triggering it from a real click means the video's audio is allowed to play
    (browsers block autoplay-with-sound that isn't started by a user gesture). */
 (function wireCameoOnNext() {
-  const links = document.querySelectorAll('a.pn-next, a.btn-next');
+  const links = document.querySelectorAll('a.pn-next, a.btn-next, a.rail-next-btn');
   links.forEach((link) => {
     link.addEventListener("click", (e) => {
       const dest = link.getAttribute("href");

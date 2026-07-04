@@ -659,6 +659,36 @@ iframe.explorer-graph { background: #fff; }
 /* always-visible escape hatch on the full-screen graph page (mobile) */
 .explorer-exit { display: none; }
 
+/* Node-details card, mirrored below the graph on mobile only (desktop uses the
+   in-iframe panel). Sits in the scroll flow under the graph — never overlaps it. */
+.node-card { display: none; }
+.node-card.hidden { display: none !important; }
+@media (max-width: 760px) {
+  .node-card {
+    display: block; margin: 12px; padding: 0; overflow: hidden;
+    background: linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border: 1px solid var(--line); border-radius: 14px; color: var(--ink);
+    box-shadow: 0 12px 34px rgba(0,0,0,0.4);
+  }
+  .node-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 14px; border-bottom: 1px solid var(--line);
+    font-family: "Bebas Neue", sans-serif; letter-spacing: 2px; font-size: 14px; color: var(--cyan);
+    position: sticky; top: 0; background: var(--bg-panel); z-index: 2;
+  }
+  .node-card-x {
+    border: 1px solid var(--line); background: #14111a; color: var(--ink-dim);
+    width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1;
+  }
+  .node-card-body {
+    max-height: 58vh; overflow-y: auto; padding: 12px 14px 18px;
+    scrollbar-width: thin; scrollbar-color: var(--magenta) transparent;
+  }
+  .node-card-body::-webkit-scrollbar { width: 9px; }
+  .node-card-body::-webkit-scrollbar-thumb { background: var(--magenta); border-radius: 5px; }
+  .node-card-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); }
+}
+
 @media (max-width: 760px) {
   /* let the page breathe: scroll vertically instead of cramming everything
      into one locked viewport where the bars overlap the graph */
@@ -818,6 +848,15 @@ iframe.explorer-graph { background: #fff; }
 .sdot.upcoming { background: #eab308; box-shadow: 0 0 6px #eab308; }
 
 .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+
+/* Advance-to-next-page button, sitting just under the storyline steps */
+.rail-next-btn {
+  display: block; margin-top: 16px; text-decoration: none; text-align: center;
+  color: #150a10; background: linear-gradient(135deg, var(--magenta), var(--rust));
+  border-radius: 10px; padding: 11px 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+  box-shadow: 0 6px 20px rgba(255,61,139,0.28);
+}
+.rail-next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(255,61,139,0.42); }
 
 /* Own little box, spaced well below the storyline steps: jump to the Cognee graph */
 .skip-graph {

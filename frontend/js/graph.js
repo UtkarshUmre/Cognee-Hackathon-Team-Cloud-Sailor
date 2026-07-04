@@ -245,5 +245,79 @@ document.getElementById("ask-chips").addEventListener("click", (e) => {
 
 loadDatasets();
 showView("brain");   // default to Cognee Brain first
+
+/* ---- Mobile: mirror the selected node's details into a card BELOW the graph ----
+   The Cognee graph is embedded same-origin, so we can read the in-iframe detail
+   panel and copy it into #node-card so it sits under the graph instead of over it. */
+(function nodeCardMirror() {
+  if (!window.matchMedia || !matchMedia("(max-width: 760px)").matches) return;
+  const frame = document.getElementById("brain-frame");
+  const card = document.getElementById("node-card");
+  if (!frame || !card) return;
+  let stylesDone = false, lastHTML = "";
+
+  function copyPanelStyles(doc) {
+    if (stylesDone) return;
+    try {
+      let out = "";
+      for (const sheet of doc.styleSheets) {
+        let rules;
+        try { rules = sheet.cssRules; } catch (e) { continue; }
+        if (!rules) continue;
+        for (const r of rules) {
+          const sel = r.selectorText;
+          if (!sel || !/si-|panel-|inspector|mm-panel/.test(sel)) continue;
+          // scope every rule under #node-card so the card renders like Cognee's panel
+          const scoped = sel.split(",").map((s) => "#node-card " + s.trim()).join(",");
+          out += scoped + "{" + r.style.cssText + "}\n";
+        }
+      }
+      if (out) {
+        const st = document.createElement("style");
+        st.id = "cognee-card-css";
+        st.textContent = out;
+        document.head.appendChild(st);
+      }
+      stylesDone = true;
+    } catch (e) { /* cross-origin or not ready — ignore */ }
+  }
+
+  function isShown(doc, el) {
+    if (!el) return false;
+    try {
+      const cs = doc.defaultView.getComputedStyle(el);
+      return cs.display !== "none" && cs.opacity !== "0";
+    } catch (e) { return false; }
+  }
+
+  function sync() {
+    let doc;
+    try { doc = frame.contentDocument; } catch (e) { return; }
+    if (!doc) return;
+    copyPanelStyles(doc);
+    const s = doc.getElementById("schema-side-panel");
+    const p = doc.getElementById("info-panel");
+    const panel = isShown(doc, s) ? s : (isShown(doc, p) ? p : null);
+    if (panel) {
+      const html = panel.innerHTML;
+      if (html && html !== lastHTML) {
+        lastHTML = html;
+        card.innerHTML =
+          '<div class="node-card-head"><span>📍 NODE DETAILS</span>' +
+          '<button type="button" class="node-card-x" aria-label="Close">✕</button></div>' +
+          '<div class="node-card-body">' + html + "</div>";
+        const x = card.querySelector(".node-card-x");
+        if (x) x.addEventListener("click", () => {
+          try { const c = doc.querySelector(".si-close"); if (c) c.click(); } catch (e) {}
+          card.classList.add("hidden"); card.innerHTML = ""; lastHTML = "";
+        });
+      }
+      card.classList.remove("hidden");
+    } else if (!card.classList.contains("hidden")) {
+      card.classList.add("hidden"); card.innerHTML = ""; lastHTML = "";
+    }
+  }
+  setInterval(sync, 400);
+})();
 refreshStatus();
 setInterval(refreshStatus, 15000);
