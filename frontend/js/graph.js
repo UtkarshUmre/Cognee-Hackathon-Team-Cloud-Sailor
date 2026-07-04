@@ -311,6 +311,13 @@ showView("brain");   // default to Cognee Brain first
           try { const c = doc.querySelector(".si-close"); if (c) c.click(); } catch (e) {}
           card.classList.add("hidden"); card.innerHTML = ""; lastHTML = "";
         });
+        // Snap down to the freshly-populated card and flash it so the scrollbar
+        // and the details are obvious.
+        card.classList.remove("hidden");
+        requestAnimationFrame(() => {
+          try { card.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+          card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+        });
       }
       card.classList.remove("hidden");
     } else if (!card.classList.contains("hidden")) {

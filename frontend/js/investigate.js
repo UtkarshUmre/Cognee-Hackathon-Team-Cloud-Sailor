@@ -503,18 +503,15 @@ document.getElementById("auto-detective").addEventListener("click", autoDetectiv
 /* Leaving Page 2 → play the founder "Mr. Chow" cameo first, then go to Access.
    Triggering it from a real click means the video's audio is allowed to play
    (browsers block autoplay-with-sound that isn't started by a user gesture). */
-(function wireCameoOnNext() {
-  const links = document.querySelectorAll('a.pn-next, a.btn-next, a.rail-next-btn');
-  links.forEach((link) => {
-    link.addEventListener("click", (e) => {
-      const dest = link.getAttribute("href");
-      if (typeof openCameo !== "function" || cameoShownSolved || !dest) return;
-      e.preventDefault();
-      cameoShownSolved = true;
-      openCameo("solved", () => { window.location.href = dest; });
-    });
-  });
-})();
+document.addEventListener("click", (e) => {
+  const link = e.target.closest && e.target.closest('a.pn-next, a.btn-next, a.rail-next-btn');
+  if (!link) return;
+  const dest = link.getAttribute("href");
+  if (typeof openCameo !== "function" || cameoShownSolved || !dest) return;
+  e.preventDefault();
+  cameoShownSolved = true;
+  openCameo("solved", () => { window.location.href = dest; });
+}, true);
 (function wireBark() {
   const b = document.getElementById("pinky-bark");
   if (!b) return;
