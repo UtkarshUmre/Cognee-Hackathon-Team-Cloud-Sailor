@@ -285,9 +285,8 @@ textarea:focus, input:focus, select:focus {
 }
 .poster-credits {
   font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 4px;
-  color: var(--ink-faint); margin-bottom: 6px;
+  color: var(--cyan); margin-bottom: 6px;   /* whole credits row cyan, like TEAM CLOUD SAILOR */
 }
-.credits-gym { color: var(--cyan); }   /* same cyan as TEAM CLOUD SAILOR */
 .poster-title { margin: 0; display: flex; flex-direction: column; align-items: center; line-height: 0.86; }
 .t-the {
   font-family: "Bebas Neue"; font-size: clamp(20px, 2.6vw, 34px); letter-spacing: 10px;
