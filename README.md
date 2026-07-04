@@ -339,6 +339,27 @@ Real engineering is a sequence of "it works… but" moments. A few that shaped t
   the poster styling; the scanner broke and came back), we started dropping **git tags** at
   each confirmed-working milestone (`good-demo-*`) so any regression is a one-command
   rollback. Cheap insurance during a fast, iterative crunch.
+- **A MutationObserver that fought itself.** On Page 5 the embedded Cognee graph's
+  node-detail panel covered the whole screen on phones and wouldn't dismiss. We inject
+  mobile CSS+JS (into the HTML we already proxy) to turn it into a drawer that auto-parks
+  to a pull-tab after ~4s. It worked on desktop but **the panel would flicker and never
+  stay parked on mobile.** Two bugs, both subtle:
+  1. **Wrong visibility check.** Cognee's *Schema* panel (`#schema-side-panel`) is shown/
+     hidden with inline `display:none` → `block`, but our code tested **opacity** (always
+     `1`), so it never correctly detected show vs hide. Fix: check
+     `display !== 'none' && opacity !== '0'` — covering both the schema panel (display) and
+     the graph panel (`#info-panel`, which toggles opacity/`.visible`).
+  2. **The observer triggered itself into a loop.** Our `MutationObserver` watched the
+     panel's `class` attribute. When our 4s timer *added* the `wr-parked` class, the
+     observer saw that class change, assumed the panel was "shown again," and **removed the
+     park** — instantly, forever. Fix: track the previous visibility state and **only react
+     to real hidden↔shown transitions**, ignoring our own class toggles (`wr-parked` doesn't
+     change `display`/`opacity`, so `wasVisible` stays the same → no reaction → no loop).
+  Also made the parked panel `position: fixed` so the slide-off `translateX` isn't clipped
+  by a parent's `overflow`, and set the proxied graph response to `no-cache` so the fix
+  actually reaches phones. **Lesson:** a MutationObserver must distinguish *external*
+  mutations from *its own*, or it will chase its tail — guard on a real state transition,
+  not on every attribute change.
 
 ## 🧹 After the hackathon (site teardown)
 

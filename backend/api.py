@@ -296,7 +296,7 @@ def cognee_graph(dataset: Optional[str] = None) -> HTMLResponse:
         html = client.visualize_html(dataset)
     except CogneeError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
-    return HTMLResponse(content=_dark_schema(html))
+    return HTMLResponse(content=_dark_schema(html), headers={"Cache-Control": "no-cache, must-revalidate"})
 
 
 def _dark_schema(html: str) -> str:
@@ -326,7 +326,8 @@ _MOBILE_PANEL_INJECT = """
 <style>
 @media (max-width: 760px) {
   #info-panel, #schema-side-panel {
-    top: 0 !important; right: 0 !important; bottom: 0 !important;
+    position: fixed !important;
+    top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
     width: 86vw !important; max-width: 340px !important;
     height: 100vh !important; max-height: 100vh !important;
     border-radius: 14px 0 0 14px !important;
@@ -352,30 +353,36 @@ _MOBILE_PANEL_INJECT = """
     var PARK_MS = 4000;  // show fully for ~4s, then park to the edge
     function wire(panel){
       if (!panel || panel.__wrWired) return; panel.__wrWired = true;
-      var timer = null;
+      var timer = null, wasVisible = false;
       var tab = document.createElement('div');
-      tab.className = 'wr-tab'; tab.textContent = '\\u2039';   // ‹
+      tab.className = 'wr-tab';
+      function setTab(){ tab.textContent = panel.classList.contains('wr-parked') ? '\\u2039' : '\\u203A'; }
       tab.addEventListener('click', function(e){
-        e.stopPropagation();
-        panel.classList.toggle('wr-parked');
-        tab.textContent = panel.classList.contains('wr-parked') ? '\\u2039' : '\\u203A';
+        e.stopPropagation(); e.preventDefault();
+        panel.classList.toggle('wr-parked'); setTab();
       });
-      panel.appendChild(tab);
+      panel.appendChild(tab); setTab();
+      // Shown = not display:none AND not opacity:0. The schema panel toggles via
+      // inline display; the info-panel toggles opacity/.visible. Handle both.
       function isVisible(){
-        try { return panel.classList.contains('visible') || getComputedStyle(panel).opacity !== '0'; }
-        catch(e){ return true; }
+        try {
+          var cs = getComputedStyle(panel);
+          return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0';
+        } catch(e){ return true; }
       }
+      function park(){ panel.classList.add('wr-parked'); setTab(); }
+      // React ONLY to real show/hide transitions — never to our own wr-parked class
+      // change (reacting to that would instantly un-park it in a loop).
       new MutationObserver(function(){
-        if (isVisible()) {
-          clearTimeout(timer);
-          panel.classList.remove('wr-parked'); tab.textContent = '\\u203A';
-          timer = setTimeout(function(){
-            panel.classList.add('wr-parked'); tab.textContent = '\\u2039';
-          }, PARK_MS);
-        } else {
-          clearTimeout(timer); panel.classList.remove('wr-parked');
-        }
+        var vis = isVisible();
+        if (vis === wasVisible) return;
+        wasVisible = vis;
+        clearTimeout(timer);
+        panel.classList.remove('wr-parked'); setTab();
+        if (vis) timer = setTimeout(park, PARK_MS);
       }).observe(panel, {attributes:true, attributeFilter:['class','style']});
+      wasVisible = isVisible();
+      if (wasVisible) timer = setTimeout(park, PARK_MS);
     }
     var iv = setInterval(function(){
       wire(document.getElementById('info-panel'));
