@@ -56,6 +56,80 @@ a real Cognee knowledge graph — and the app *shows you that graph*.
 
 ---
 
+## 🌳 The three trees (how it all fits together, at a glance)
+
+Three quick maps for reviewers — the **logic** (what happens when a user acts), the
+**resources** (every tool/model and who pays), and **Cognee** (exactly how we exercise it).
+
+### 1) Logic tree — a user action → what runs
+
+```
+User opens the app (5 narrative pages, vanilla JS)
+│
+├─ Page 1  Intro / poster ................ AI poster (FLUX) + cast strip
+│
+├─ Page 2  Investigation
+│    ├─ Add a clue ....................... Browser → FastAPI /clues
+│    │                                       → Cognee remember() → cognify pipeline
+│    ├─ "Ask the Wolfpack" ............... FastAPI /investigate
+│    │    ├─ (1) Cognee recall() / GRAPH_COMPLETION  → pulls connected evidence
+│    │    └─ (2) 4 Claude agents reason over that evidence (concurrently)
+│    │             Planner · Wildcard · Worrier · Optimist
+│    ├─ 🔍 Fact-check a clue ............. FastAPI /validate → Cognee vs Claude → true/false
+│    └─ 🕵️ Auto Detective ............... loops the above hands-free; Pinky walks to the gym
+│
+├─ Page 3  Access
+│    ├─ Reunion video reveals code 8675309 (auto-plays Pinky's bark)
+│    ├─ Founder "Mr. Chow" cameo ........ pre-rendered lip-synced clips
+│    ├─ Enter code  +  Scan face ........ FastAPI /auth/verify → DeepFace (local, on server)
+│    └─ code AND face  →  unlock the gym
+│
+├─ Page 4  Success ...................... dog-show winning video
+│
+└─ Page 5  Cognee graph
+     ├─ Live embedded Cognee UI ......... FastAPI proxies /cognee/graph (key stays server-side)
+     ├─ Dataset picker .................. switch memory graphs (pinky_serbia ⇄ mr_chow …)
+     └─ "Ask AI agent about Cognee" ..... built-in guide (no login) + optional free Puter AI
+```
+
+### 2) Resource tree — every tool/model and who pays
+
+```
+Wolfpack Recall
+├─ Memory / knowledge graph .... Cognee Cloud (open source) ............. free dev plan
+├─ Reasoning (4 agents + check). Claude — Haiku 4.5 in prod / Opus local . owner key (rate-limited)
+├─ Movie poster ................ FLUX.1-schnell on a Hugging Face Space ... free (HF Space)
+├─ Founder ~3s video ........... Omni-Video-Factory (image→video, HF) .... free (HF Space)
+├─ Founder lip-sync ............ fal.ai `sync-lipsync` (hosted) .......... ~cents/clip
+├─ Founder / Chow voice ........ edge-tts (MS Neural, zh-CN-YunxiNeural) . free, keyless
+├─ Face recognition ............ DeepFace — SFace + YuNet/RetinaFace ..... free, local (on our server)
+├─ Page-5 help chat ............ built-in guide + optional Puter.js AI ... user-pays → $0 to us
+└─ Hosting ..................... Docker on Render ........................ standard plan
+
+Backend  FastAPI (backend/api.py · wolfpack.py · cognee_client.py · face_gate.py · video_gen.py)
+Frontend vanilla JS · vis-network · CSS tokens        Secrets  .env (git-ignored, server-side only)
+```
+
+### 3) Cognee tree — how we exercise it across its whole surface
+
+```
+Cognee Cloud  (the brain)
+├─ Memory-native API
+│    ├─ remember()  ............ ingest a clue + cognify into hybrid vector+graph memory
+│    └─ recall() / GRAPH_COMPLETION  fuse every clue into one grounded answer
+├─ Fact-checking .............. 🔍 asks the graph: is this statement true / false / unknown
+├─ Datasets (memory graphs)
+│    ├─ pinky_serbia  ......... the live case memory (default)
+│    ├─ mr_chow  .............. 1,000 lines of Mr. Chow dialogue → its own auto-built graph
+│    └─ pinky_case · cloud_sailor_memory  (earlier graphs)
+├─ node_sets .................. verified / timeline / all  (per-lens tagging)
+├─ Ontology / schema .......... cognee/ontology.ttl (Dog, Person, Location, Clue, Code, Event)
+├─ Cognee Skill ............... cognee/skills/wolfpack-recall.md (procedural playbook)
+└─ visualize .................. Page 5 embeds Cognee's REAL UI + graph (not a mockup)
+```
+
+---
+
 ## 🧠 Cognee — used across its whole surface (the "Best Use of Cognee" story)
 
 Most teams call `add()` + one search. We exercise Cognee deeply:
