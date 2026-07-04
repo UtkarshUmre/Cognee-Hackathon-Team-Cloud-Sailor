@@ -152,18 +152,27 @@ def verify(data_url: str) -> VerifyResult:
     from deepface import DeepFace
 
     img = _decode_dataurl(data_url)
-    try:
-        results = DeepFace.find(
+
+    def _find(enforce: bool):
+        return DeepFace.find(
             img_path=img,
             db_path=str(GALLERY),
             model_name=MODEL_NAME,
             detector_backend=DETECTOR,
-            enforce_detection=True,
+            enforce_detection=enforce,
             silent=True,
         )
-    except ValueError as e:
-        # DeepFace raises ValueError when it can't detect a face.
-        return VerifyResult(False, None, None, None, f"No face detected. {FACE_TIPS}")
+
+    # Try strict detection first (best precision). If DeepFace can't box a face
+    # in the probe OR in an enrolled reference (glasses/distance/angle), it raises
+    # — so we fall back to a lenient match instead of dead-ending the scan.
+    try:
+        results = _find(True)
+    except Exception:  # noqa: BLE001
+        try:
+            results = _find(False)
+        except Exception:  # noqa: BLE001
+            return VerifyResult(False, None, None, None, f"Couldn't read the frame. {FACE_TIPS}")
 
     # results is a list of DataFrames (one per detected face); take the best row.
     best = None
