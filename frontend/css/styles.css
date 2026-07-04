@@ -820,6 +820,20 @@ iframe.explorer-graph { background: #fff; }
 .sdot.upcoming { background: #eab308; box-shadow: 0 0 6px #eab308; }
 
 .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+
+/* Own little box, spaced well below the storyline steps: jump to the Cognee graph */
+.skip-graph {
+  margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line);
+  display: flex; flex-direction: column; gap: 10px; text-align: center;
+}
+.skip-graph-lead { margin: 0; font-size: 11.5px; color: var(--ink-faint); line-height: 1.45; }
+.skip-graph-btn {
+  display: block; text-decoration: none; text-align: center;
+  color: #052e16; background: linear-gradient(135deg, var(--cyan), #22c55e);
+  border-radius: 10px; padding: 10px 12px; font-size: 12.5px; font-weight: 700;
+  box-shadow: 0 4px 16px rgba(56,225,214,0.28);
+}
+.skip-graph-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(56,225,214,0.45); }
 .step {
   display: flex; align-items: center; gap: 10px; padding: 10px 11px;
   border-radius: 11px; border: 1px solid var(--line); background: #100d16;
