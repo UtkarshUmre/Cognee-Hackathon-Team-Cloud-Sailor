@@ -20,6 +20,10 @@ RUN python -c "import numpy as np; from deepface import DeepFace; \
 DeepFace.represent(np.zeros((160,160,3), dtype='uint8'), model_name='SFace', \
 detector_backend='skip', enforce_detection=False)" || true
 
+# Pre-download the RetinaFace detector weights (fallback detector for real webcam
+# frames the fast opencv detector can't box) so it's ready in the cloud/Germany.
+RUN python -c "from retinaface import RetinaFace; RetinaFace.build_model()" || true
+
 # App code (see .dockerignore for what's excluded, e.g. .venv/.env).
 COPY . .
 

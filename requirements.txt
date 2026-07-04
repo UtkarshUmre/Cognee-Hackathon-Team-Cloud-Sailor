@@ -12,6 +12,7 @@ anthropic>=0.39
 # Page 3 — facial-recognition security gate.
 deepface>=0.0.93
 tf-keras
+retina-face>=0.0.17   # robust fallback face detector for real webcam frames
 
 # Poster generation via a free public Hugging Face Space (scripts/gen_poster_hf.py).
 gradio_client>=1.0

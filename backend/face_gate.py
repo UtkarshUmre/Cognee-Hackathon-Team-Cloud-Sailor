@@ -19,10 +19,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+import os
+
 _ROOT = Path(__file__).resolve().parent.parent
 GALLERY = _ROOT / "media" / "faces"          # authorized faces live here
 MODEL_NAME = "SFace"                          # light + fast
-DETECTOR = "opencv"                           # no extra system deps
+# Face detectors tried in order: fast opencv first, then robust retinaface as a
+# fallback for real webcam frames opencv can't box (glasses/lighting/angle).
+# Tunable via FACE_DETECTORS (comma-separated).
+DETECTORS = [d.strip() for d in os.getenv("FACE_DETECTORS", "opencv,retinaface").split(",") if d.strip()]
+DETECTOR = DETECTORS[0]                       # primary (kept for compatibility)
 
 
 class FaceGateError(RuntimeError):
@@ -105,18 +111,24 @@ def verify(data_url: str) -> VerifyResult:
     from deepface import DeepFace
 
     img = _decode_dataurl(data_url)
-    try:
-        results = DeepFace.find(
-            img_path=img,
-            db_path=str(GALLERY),
-            model_name=MODEL_NAME,
-            detector_backend=DETECTOR,
-            enforce_detection=True,
-            silent=True,
-        )
-    except ValueError as e:
-        # DeepFace raises ValueError when it can't detect a face.
-        return VerifyResult(False, None, None, None, "No face detected — look at the camera.")
+    # Try each detector in order; a weak one (opencv) may not find the face in a
+    # real webcam frame, so fall back to a robust one (retinaface) before giving up.
+    results = None
+    for det in DETECTORS:
+        try:
+            results = DeepFace.find(
+                img_path=img,
+                db_path=str(GALLERY),
+                model_name=MODEL_NAME,
+                detector_backend=det,
+                enforce_detection=True,
+                silent=True,
+            )
+            break
+        except Exception:  # noqa: BLE001 — no face / detector unavailable; try the next
+            continue
+    if results is None:
+        return VerifyResult(False, None, None, None, "No face detected — look straight at the camera.")
 
     # results is a list of DataFrames (one per detected face); take the best row.
     best = None
