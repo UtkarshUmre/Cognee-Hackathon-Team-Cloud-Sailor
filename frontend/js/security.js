@@ -121,8 +121,8 @@ async function startCamera() {
     await v.play().catch(() => {});
     $("#enroll").disabled = false;
     $("#scan").disabled = false;
-    $("#start-cam").textContent = "◉ Camera on";
-    $("#start-cam").disabled = true;
+    $("#start-cam").textContent = "■ Stop camera";   // click again to turn it off
+    $("#start-cam").disabled = false;
     setMsg("Camera ready. Enroll your face, then scan to enter.", "ok");
   } catch (e) {
     setMsg(cameraErrorHelp(e), "bad");
@@ -130,6 +130,30 @@ async function startCamera() {
     $("#start-cam").disabled = false;
   }
 }
+
+/* Release the webcam so the recording light turns off. */
+function stopCamera() {
+  try {
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+  } catch {}
+  stream = null;
+  const v = $("#video");
+  if (v) v.srcObject = null;
+  $("#enroll").disabled = true;
+  $("#scan").disabled = true;
+  $("#start-cam").textContent = "◉ Start camera";
+  $("#start-cam").disabled = false;
+}
+
+/* The Start/Stop button toggles the camera on and off. */
+function toggleCamera() {
+  if (stream) stopCamera();
+  else startCamera();
+}
+
+// Free the camera when leaving the page (belt-and-suspenders for the light).
+window.addEventListener("pagehide", stopCamera);
+window.addEventListener("beforeunload", stopCamera);
 
 function cameraErrorHelp(e) {
   const name = e && e.name ? e.name : "";
@@ -219,6 +243,8 @@ async function scanToEnter() {
       sessionStorage.setItem("wolfpack_access", "granted");
       faceOK = true;
       updateGate();
+      setTimeout(stopCamera, 1500);   // release the camera once you're verified
+
     } else {
       showVerdict("✗ ACCESS DENIED", false);
       setMsg(`${r.reason}${r.distance != null ? ` (distance ${r.distance})` : ""}`, "bad");
@@ -231,7 +257,7 @@ async function scanToEnter() {
   }
 }
 
-$("#start-cam").addEventListener("click", startCamera);
+$("#start-cam").addEventListener("click", toggleCamera);
 $("#enroll").addEventListener("click", enrollFace);
 $("#scan").addEventListener("click", scanToEnter);
 $("#code-check").addEventListener("click", checkCode);
