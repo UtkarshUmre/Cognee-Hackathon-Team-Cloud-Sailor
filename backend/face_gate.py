@@ -95,84 +95,47 @@ def enroll(name: str, data_url: str) -> str:
     return out.name
 
 
-def _embed(img):
-    """SFace embedding for an image (whole frame if no face is boxed).
-
-    enforce_detection=False means it never throws on a missing face box — it just
-    embeds the frame — which keeps the demo scanner from dead-ending.
-    """
-    from deepface import DeepFace
-
-    reps = DeepFace.represent(
-        img_path=img,
-        model_name=MODEL_NAME,
-        detector_backend=DETECTOR,
-        enforce_detection=False,
-        align=True,
-    )
-    if not reps:
-        return None
-    return reps[0].get("embedding")
-
-
-def _cosine_distance(a, b) -> float:
-    import numpy as np
-
-    va, vb = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
-    denom = (np.linalg.norm(va) * np.linalg.norm(vb)) + 1e-9
-    return float(1.0 - (va @ vb) / denom)
-
-
 def verify(data_url: str) -> VerifyResult:
-    """Match a webcam frame against the enrolled gallery.
-
-    We compute the SFace embedding ourselves and compare with a loose cutoff so
-    the enrolled person is recognized reliably in a live demo (this gate is
-    theater for the judges, not real security). Tunable via FACE_MATCH_CUTOFF.
-    """
-    import os
-
-    import cv2
-
+    """Match a webcam frame against the authorized gallery via DeepFace.find."""
     if not is_available():
         raise FaceGateError("DeepFace/OpenCV not installed yet.")
     if not enrolled_names():
         return VerifyResult(False, None, None, None, "No operatives enrolled yet.")
 
+    from deepface import DeepFace
+
     img = _decode_dataurl(data_url)
     try:
-        probe = _embed(img)
-    except Exception:  # noqa: BLE001
-        probe = None
-    if probe is None:
-        return VerifyResult(False, None, None, None, "Couldn't read the frame — try again.")
+        results = DeepFace.find(
+            img_path=img,
+            db_path=str(GALLERY),
+            model_name=MODEL_NAME,
+            detector_backend=DETECTOR,
+            enforce_detection=True,
+            silent=True,
+        )
+    except ValueError as e:
+        # DeepFace raises ValueError when it can't detect a face.
+        return VerifyResult(False, None, None, None, "No face detected — look at the camera.")
 
-    best_name, best_dist = None, 2.0
-    for face_file in GALLERY.glob("*.jpg"):
-        try:
-            ref_img = cv2.imread(str(face_file))
-            ref = _embed(ref_img) if ref_img is not None else None
-        except Exception:  # noqa: BLE001
-            ref = None
-        if ref is None:
-            continue
-        d = _cosine_distance(probe, ref)
-        if d < best_dist:
-            best_name, best_dist = face_file.stem, d
+    # results is a list of DataFrames (one per detected face); take the best row.
+    best = None
+    for df in results:
+        if df is not None and len(df) > 0:
+            row = df.iloc[0]
+            dist = float(row.get("distance", 1.0))
+            if best is None or dist < best[1]:
+                best = (str(row.get("identity", "")), dist, float(row.get("threshold", 0.0)))
+    if best is None:
+        return VerifyResult(False, None, None, None, "No match in the gallery.")
 
-    if best_name is None:
-        return VerifyResult(False, None, None, None, "No usable enrolled face — re-enroll.")
-
-    # This gate is theater for the judges, not real security. Once a face is
-    # enrolled and we got a live frame, grant to the closest enrolled operative so
-    # the demo never dead-ends. FACE_MATCH_CUTOFF can re-enable a real cutoff if
-    # ever wanted (default 2.0 = the max cosine distance = always grant).
-    cutoff = float(os.getenv("FACE_MATCH_CUTOFF", "2.0"))
-    granted = best_dist <= cutoff
+    identity_path, distance, threshold = best
+    name = Path(identity_path).stem
+    granted = distance <= threshold if threshold else distance < 0.6
     return VerifyResult(
         granted=granted,
-        identity=best_name if granted else None,
-        distance=round(best_dist, 4),
-        threshold=round(cutoff, 4),
+        identity=name if granted else None,
+        distance=round(distance, 4),
+        threshold=round(threshold, 4) if threshold else None,
         reason="Access granted." if granted else "Face not recognized.",
     )
