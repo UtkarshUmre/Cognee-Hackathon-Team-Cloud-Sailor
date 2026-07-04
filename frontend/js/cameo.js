@@ -182,10 +182,20 @@ async function openCameo(kind = "intro", onClose = null) {
       };
       next();
     };
-    // Play 2 distinct random clips so it's never "the same loop".
-    another.addEventListener("click", () => { try { loopVid.pause(); } catch {} playSeq([pickSayFrom(say)]); });
+    // The preferred opening line, and the "long" one that should ONLY be reachable
+    // from the dropdown (never in the auto-play / "Another one!" pool).
+    const introClip = say.find((c) => /guess who'?s back/i.test(c.text));
+    const autoPool = say.filter((c) => !/mother.?trucker/i.test(c.text));   // excl. Toodaloo
+    const randomFrom = (list) => {
+      if (!list.length) return null;
+      let v; do { v = list[Math.floor(Math.random() * list.length)]; } while (list.length > 1 && v.file === lastSay);
+      lastSay = v.file; return v;
+    };
 
-    // Re-watch dropdown: pick any specific line to replay.
+    // "Another one!" — random, but never the mother-truckers line.
+    another.addEventListener("click", () => { try { loopVid.pause(); } catch {} playSeq([randomFrom(autoPool)].filter(Boolean)); });
+
+    // Re-watch dropdown: EVERY line is selectable here (incl. the long Toodaloo one).
     const sel = overlay.querySelector("#cameo-select");
     if (sel) {
       say.forEach((c, i) => {
@@ -202,7 +212,11 @@ async function openCameo(kind = "intro", onClose = null) {
       });
     }
 
-    playSeq(shuffled(say).slice(0, 2));
+    // Initial cameo: start with "Guess who's back…", then one more random line
+    // (from the pool that excludes the mother-truckers clip).
+    const first = introClip || randomFrom(autoPool);
+    const second = randomFrom(autoPool.filter((c) => c !== first));
+    playSeq([first, second].filter(Boolean));
     return;
   }
 
