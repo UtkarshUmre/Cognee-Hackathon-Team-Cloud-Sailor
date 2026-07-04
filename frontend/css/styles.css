@@ -678,9 +678,9 @@ iframe.explorer-graph { background: #fff; }
   /* hide the floating exit pill on phones — it overlapped the control buttons,
      and the sticky header already has Back + Intro. */
   .explorer-exit { display: none !important; }
-  /* move the chat launcher to the LEFT so it doesn't cover the graph's right-edge
-     node pull-tab, and keep it clear of the controls. */
-  .ask-dock { left: 10px; right: auto; bottom: 10px; }
+  /* chat launcher in the bottom-RIGHT corner, inset a bit so the node sheet's
+     right-edge scrollbar stays visible next to it. */
+  .ask-dock { right: 14px; left: auto; bottom: 14px; }
   .ask-launch { font-size: 12px; padding: 10px 14px; }
   .ask-panel { height: 60vh; width: min(360px, 92vw); }
 }

@@ -319,79 +319,35 @@ def _dark_schema(html: str) -> str:
     return html.replace("</head>", inject + "</head>", 1)
 
 
-# On phones the Cognee node-detail panel (#info-panel / #schema-side-panel) covers
-# most of the graph. This injected CSS+JS makes it a right-side drawer: it shows on
-# node click, auto-parks to the edge after a delay, and leaves a pull-tab to reopen.
+# On phones the Cognee node-detail panel (#info-panel / #schema-side-panel) covered
+# most of the graph. This makes it a BOTTOM SHEET: when you tap a node the card slides
+# up from the bottom (the graph stays visible above), stays open, and scrolls inside
+# itself with a visible scrollbar on the right. Dismiss with Cognee's own ✕.
 _MOBILE_PANEL_INJECT = """
 <style>
 @media (max-width: 760px) {
   #info-panel, #schema-side-panel {
     position: fixed !important;
-    top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
-    width: 86vw !important; max-width: 340px !important;
-    height: 100vh !important; max-height: 100vh !important;
-    border-radius: 14px 0 0 14px !important;
-    transition: transform .35s cubic-bezier(.16,1,.3,1) !important;
+    left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important;
+    width: 100vw !important; max-width: 100vw !important;
+    height: 52vh !important; max-height: 52vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    overflow-y: auto !important; -webkit-overflow-scrolling: touch;
+    box-shadow: 0 -12px 34px rgba(0,0,0,0.55) !important;
     z-index: 2000 !important;
+    padding-bottom: 24px !important;
+    scrollbar-width: thin; scrollbar-color: #ff3d8b transparent;
   }
-  #info-panel.wr-parked, #schema-side-panel.wr-parked {
-    transform: translateX(calc(100% - 30px)) !important; opacity: 1 !important;
+  /* keep the scrollbar always visible on the right so it's obviously scrollable */
+  #info-panel::-webkit-scrollbar, #schema-side-panel::-webkit-scrollbar { width: 9px; }
+  #info-panel::-webkit-scrollbar-thumb, #schema-side-panel::-webkit-scrollbar-thumb {
+    background: #ff3d8b; border-radius: 5px; border: 2px solid rgba(0,0,0,0.2);
   }
-  .wr-tab {
-    position: absolute; left: -1px; top: 50%; transform: translateY(-50%);
-    width: 30px; height: 78px; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #ff3d8b, #38e1d6); color: #0b0710;
-    font-size: 16px; font-weight: 800; border-radius: 12px 0 0 12px;
-    box-shadow: -2px 0 12px rgba(0,0,0,.45); cursor: pointer; z-index: 5; user-select: none;
+  #info-panel::-webkit-scrollbar-track, #schema-side-panel::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.06);
   }
 }
 </style>
-<script>
-(function(){
-  try {
-    if (!window.matchMedia || !matchMedia('(max-width: 760px)').matches) return;
-    var PARK_MS = 4000;  // show fully for ~4s, then park to the edge
-    function wire(panel){
-      if (!panel || panel.__wrWired) return; panel.__wrWired = true;
-      var timer = null, wasVisible = false;
-      var tab = document.createElement('div');
-      tab.className = 'wr-tab';
-      function setTab(){ tab.textContent = panel.classList.contains('wr-parked') ? '\\u2039' : '\\u203A'; }
-      tab.addEventListener('click', function(e){
-        e.stopPropagation(); e.preventDefault();
-        panel.classList.toggle('wr-parked'); setTab();
-      });
-      panel.appendChild(tab); setTab();
-      // Shown = not display:none AND not opacity:0. The schema panel toggles via
-      // inline display; the info-panel toggles opacity/.visible. Handle both.
-      function isVisible(){
-        try {
-          var cs = getComputedStyle(panel);
-          return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0';
-        } catch(e){ return true; }
-      }
-      function park(){ panel.classList.add('wr-parked'); setTab(); }
-      // React ONLY to real show/hide transitions — never to our own wr-parked class
-      // change (reacting to that would instantly un-park it in a loop).
-      new MutationObserver(function(){
-        var vis = isVisible();
-        if (vis === wasVisible) return;
-        wasVisible = vis;
-        clearTimeout(timer);
-        panel.classList.remove('wr-parked'); setTab();
-        if (vis) timer = setTimeout(park, PARK_MS);
-      }).observe(panel, {attributes:true, attributeFilter:['class','style']});
-      wasVisible = isVisible();
-      if (wasVisible) timer = setTimeout(park, PARK_MS);
-    }
-    var iv = setInterval(function(){
-      wire(document.getElementById('info-panel'));
-      wire(document.getElementById('schema-side-panel'));
-    }, 500);
-    setTimeout(function(){ clearInterval(iv); }, 20000);
-  } catch(e){}
-})();
-</script>
 """
 
 
