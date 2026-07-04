@@ -300,7 +300,9 @@ def cognee_graph(dataset: Optional[str] = None) -> HTMLResponse:
 
 
 def _dark_schema(html: str) -> str:
-    """Force the embedded Cognee viz to open in dark theme on the Schema tab."""
+    """Force the embedded Cognee viz to open in dark theme on the Schema tab, and
+    on phones turn the node-detail panel into a collapsible drawer with a pull-tab
+    so it stops covering the whole graph."""
     html = html.replace('<html lang="en" class="light">', '<html lang="en" class="dark">')
     inject = (
         "<script>"
@@ -312,8 +314,78 @@ def _dark_schema(html: str) -> str:
         "dark();var t=setInterval(function(){dark();schema();if(picked)clearInterval(t);},250);"
         "setTimeout(function(){clearInterval(t);},4000);})();"
         "</script>"
+        + _MOBILE_PANEL_INJECT
     )
     return html.replace("</head>", inject + "</head>", 1)
+
+
+# On phones the Cognee node-detail panel (#info-panel / #schema-side-panel) covers
+# most of the graph. This injected CSS+JS makes it a right-side drawer: it shows on
+# node click, auto-parks to the edge after a delay, and leaves a pull-tab to reopen.
+_MOBILE_PANEL_INJECT = """
+<style>
+@media (max-width: 760px) {
+  #info-panel, #schema-side-panel {
+    top: 0 !important; right: 0 !important; bottom: 0 !important;
+    width: 86vw !important; max-width: 340px !important;
+    height: 100vh !important; max-height: 100vh !important;
+    border-radius: 14px 0 0 14px !important;
+    transition: transform .35s cubic-bezier(.16,1,.3,1) !important;
+    z-index: 2000 !important;
+  }
+  #info-panel.wr-parked, #schema-side-panel.wr-parked {
+    transform: translateX(calc(100% - 30px)) !important; opacity: 1 !important;
+  }
+  .wr-tab {
+    position: absolute; left: -1px; top: 50%; transform: translateY(-50%);
+    width: 30px; height: 78px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #ff3d8b, #38e1d6); color: #0b0710;
+    font-size: 16px; font-weight: 800; border-radius: 12px 0 0 12px;
+    box-shadow: -2px 0 12px rgba(0,0,0,.45); cursor: pointer; z-index: 5; user-select: none;
+  }
+}
+</style>
+<script>
+(function(){
+  try {
+    if (!window.matchMedia || !matchMedia('(max-width: 760px)').matches) return;
+    var PARK_MS = 45000;  // show fully for ~45s, then park to the edge
+    function wire(panel){
+      if (!panel || panel.__wrWired) return; panel.__wrWired = true;
+      var timer = null;
+      var tab = document.createElement('div');
+      tab.className = 'wr-tab'; tab.textContent = '\\u2039';   // ‹
+      tab.addEventListener('click', function(e){
+        e.stopPropagation();
+        panel.classList.toggle('wr-parked');
+        tab.textContent = panel.classList.contains('wr-parked') ? '\\u2039' : '\\u203A';
+      });
+      panel.appendChild(tab);
+      function isVisible(){
+        try { return panel.classList.contains('visible') || getComputedStyle(panel).opacity !== '0'; }
+        catch(e){ return true; }
+      }
+      new MutationObserver(function(){
+        if (isVisible()) {
+          clearTimeout(timer);
+          panel.classList.remove('wr-parked'); tab.textContent = '\\u203A';
+          timer = setTimeout(function(){
+            panel.classList.add('wr-parked'); tab.textContent = '\\u2039';
+          }, PARK_MS);
+        } else {
+          clearTimeout(timer); panel.classList.remove('wr-parked');
+        }
+      }).observe(panel, {attributes:true, attributeFilter:['class','style']});
+    }
+    var iv = setInterval(function(){
+      wire(document.getElementById('info-panel'));
+      wire(document.getElementById('schema-side-panel'));
+    }, 500);
+    setTimeout(function(){ clearInterval(iv); }, 20000);
+  } catch(e){}
+})();
+</script>
+"""
 
 
 @app.get("/memory/search")
