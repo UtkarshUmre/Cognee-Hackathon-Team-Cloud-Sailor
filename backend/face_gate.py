@@ -131,7 +131,13 @@ def verify(data_url: str) -> VerifyResult:
 
     identity_path, distance, threshold = best
     name = Path(identity_path).stem
-    granted = distance <= threshold if threshold else distance < 0.6
+    # Give a margin over DeepFace's strict threshold so the enrolled person still
+    # passes despite lighting/glasses/distance differences between enroll and scan
+    # (a live demo, not a bank vault). Tunable via FACE_MATCH_MARGIN.
+    import os
+    margin = float(os.getenv("FACE_MATCH_MARGIN", "1.25"))
+    cutoff = (threshold if threshold else 0.593) * margin
+    granted = distance <= cutoff
     return VerifyResult(
         granted=granted,
         identity=name if granted else None,
