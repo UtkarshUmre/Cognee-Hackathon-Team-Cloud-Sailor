@@ -102,13 +102,24 @@ Wolfpack Recall
 ├─ Founder ~3s video ........... Omni-Video-Factory (image→video, HF) .... free (HF Space)
 ├─ Founder lip-sync ............ fal.ai `sync-lipsync` (hosted) .......... ~cents/clip
 ├─ Founder / Chow voice ........ edge-tts (MS Neural, zh-CN-YunxiNeural) . free, keyless
-├─ Face recognition ............ DeepFace — SFace + YuNet/RetinaFace ..... free, local (on our server)
+├─ Face recognition ............ DeepFace (open source) — SFace + YuNet/RetinaFace
+│                                weights baked into the Docker image at build time,
+│                                run on our own server ................... FREE · $0/scan · no API
 ├─ Page-5 help chat ............ built-in guide + optional Puter.js AI ... user-pays → $0 to us
-└─ Hosting ..................... Docker on Render ........................ standard plan
+└─ Hosting ..................... Docker on Render ........................ free/hobby-tier friendly
 
 Backend  FastAPI (backend/api.py · wolfpack.py · cognee_client.py · face_gate.py · video_gen.py)
 Frontend vanilla JS · vis-network · CSS tokens        Secrets  .env (git-ignored, server-side only)
 ```
+
+> **Cost philosophy — built to run as close to *free* as possible.** Everything open or
+> free is used that way: **Cognee** (open-source, free dev plan), **DeepFace** face
+> recognition (open-source models **downloaded into the Docker image**, run locally — **$0
+> per scan, no paid API**), **FLUX** + **Omni-Video-Factory** (free Hugging Face Spaces),
+> **edge-tts** (free, keyless), and the **Puter** help chat (user-pays → $0 to us). The
+> **only** paid pieces are the owner's **Claude** calls (rate-limited + cheap Haiku in prod)
+> and the one-time **fal.ai** lip-sync used to pre-render the founder clips — everything
+> else costs nothing to run.
 
 ### 3) Cognee tree — how we exercise it across its whole surface
 
