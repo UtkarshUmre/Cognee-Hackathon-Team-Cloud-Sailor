@@ -20,8 +20,10 @@ RUN python -c "import numpy as np; from deepface import DeepFace; \
 DeepFace.represent(np.zeros((160,160,3), dtype='uint8'), model_name='SFace', \
 detector_backend='skip', enforce_detection=False)" || true
 
-# Pre-download the RetinaFace detector weights (fallback detector for real webcam
-# frames the fast opencv detector can't box) so it's ready in the cloud/Germany.
+# Pre-download the detector weights so scans are fast in the cloud/Germany (no
+# first-request download): YuNet (fast primary) + RetinaFace (robust backstop).
+RUN python -c "import numpy as np; from deepface import DeepFace; \
+DeepFace.extract_faces(np.zeros((200,200,3), dtype='uint8'), detector_backend='yunet', enforce_detection=False)" || true
 RUN python -c "from retinaface import RetinaFace; RetinaFace.build_model()" || true
 
 # App code (see .dockerignore for what's excluded, e.g. .venv/.env).

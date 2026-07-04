@@ -24,10 +24,10 @@ import os
 _ROOT = Path(__file__).resolve().parent.parent
 GALLERY = _ROOT / "media" / "faces"          # authorized faces live here
 MODEL_NAME = "SFace"                          # light + fast
-# Face detectors tried in order: fast opencv first, then robust retinaface as a
-# fallback for real webcam frames opencv can't box (glasses/lighting/angle).
-# Tunable via FACE_DETECTORS (comma-separated).
-DETECTORS = [d.strip() for d in os.getenv("FACE_DETECTORS", "opencv,retinaface").split(",") if d.strip()]
+# Face detectors tried in order. yunet is fast (~50ms) AND robust on real webcam
+# faces, so it's primary; opencv is a fast secondary; retinaface is a slow but very
+# reliable last-resort backstop. Tunable via FACE_DETECTORS (comma-separated).
+DETECTORS = [d.strip() for d in os.getenv("FACE_DETECTORS", "yunet,opencv,retinaface").split(",") if d.strip()]
 DETECTOR = DETECTORS[0]                       # primary (kept for compatibility)
 
 
