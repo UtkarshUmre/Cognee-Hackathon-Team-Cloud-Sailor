@@ -115,7 +115,7 @@ function driveMotion(stage, analyser) {
   return () => cancelAnimationFrame(raf);
 }
 
-async function openCameo(kind = "intro") {
+async function openCameo(kind = "intro", onClose = null) {
   if (cameoOpen) return;
   cameoOpen = true;
   openCount += 1;
@@ -140,13 +140,16 @@ async function openCameo(kind = "intro") {
     stage.style.setProperty("--talk", 0);
     try { loopVid.loop = false; loopVid.pause(); } catch {}   // stop looping once he's done
   };
+  let closed = false;
   const close = () => {
+    if (closed) return; closed = true;
     try { audio.pause(); loopVid.pause(); } catch {}
     stopSpeaking();
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     overlay.classList.remove("show");
     setTimeout(() => overlay.remove(), 300);
     cameoOpen = false;
+    if (typeof onClose === "function") { try { onClose(); } catch {} }   // e.g. navigate on
   };
   overlay.querySelector(".cameo-close").addEventListener("click", close);
   overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });

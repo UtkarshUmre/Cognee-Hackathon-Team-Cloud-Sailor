@@ -337,12 +337,6 @@ function travelTick() {
     const passed = Math.round(routeProgress * (ROUTE.length - 1));
     if (passed !== lastPassed) { lastPassed = passed; updateStorylineStates(passed); }
 
-    // Case solved — Pinky reaches the gymnasium: founder cameo (once).
-    if (routeProgress > 0.985 && !cameoShownSolved && typeof openCameo === "function") {
-      cameoShownSolved = true;
-      openCameo("solved");
-    }
-
     const onRoute = pointAlong(ROUTE_PTS, routeProgress);
     const bob = Math.sin(now / 600) * 6;
     pinkyPos.x += (onRoute.x - pinkyPos.x) * 0.13;
@@ -505,6 +499,22 @@ async function autoDetective() {
 
 /* ====================== WIRE-UP ====================== */
 document.getElementById("auto-detective").addEventListener("click", autoDetective);
+
+/* Leaving Page 2 → play the founder "Mr. Chow" cameo first, then go to Access.
+   Triggering it from a real click means the video's audio is allowed to play
+   (browsers block autoplay-with-sound that isn't started by a user gesture). */
+(function wireCameoOnNext() {
+  const links = document.querySelectorAll('a.pn-next, a.btn-next');
+  links.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      const dest = link.getAttribute("href");
+      if (typeof openCameo !== "function" || cameoShownSolved || !dest) return;
+      e.preventDefault();
+      cameoShownSolved = true;
+      openCameo("solved", () => { window.location.href = dest; });
+    });
+  });
+})();
 (function wireBark() {
   const b = document.getElementById("pinky-bark");
   if (!b) return;
