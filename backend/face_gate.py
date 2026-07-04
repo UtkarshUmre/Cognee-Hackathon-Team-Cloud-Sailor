@@ -119,34 +119,20 @@ FACE_TIPS = (
 )
 
 
-def _face_detectable(img) -> bool:
-    """True if DeepFace can find exactly one clear face in the frame."""
-    try:
-        from deepface import DeepFace
-
-        faces = DeepFace.extract_faces(
-            img_path=img,
-            detector_backend=DETECTOR,
-            enforce_detection=True,
-        )
-        return bool(faces)
-    except Exception:  # noqa: BLE001 — ValueError = no face; any failure => not detectable
-        return False
-
-
 def enroll(name: str, data_url: str) -> str:
     """Save a webcam frame as an authorized face. Returns the stored file name.
 
-    Rejects frames where no clear face is found so users aren't enrolled with a
-    bad reference photo (a common cause of later "access denied").
+    Enrollment is intentionally lenient: we save the frame even if the (weak)
+    OpenCV detector can't box a face in it — glasses, distance, or a slight angle
+    routinely defeat that detector, and blocking enrollment on it caused false
+    "no clear face detected" failures. The verify step still does the real
+    matching, and the on-screen tips guide users toward a clean shot.
     """
     import cv2
 
     if not is_available():
         raise FaceGateError("DeepFace/OpenCV not installed yet.")
     img = _decode_dataurl(data_url)
-    if not _face_detectable(img):
-        raise FaceGateError(f"No clear face detected. {FACE_TIPS}")
     safe = "".join(c for c in name.strip() if c.isalnum() or c in ("-", "_")) or "operative"
     GALLERY.mkdir(parents=True, exist_ok=True)
     out = GALLERY / f"{safe}.jpg"
