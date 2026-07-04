@@ -349,7 +349,7 @@ _MOBILE_PANEL_INJECT = """
 (function(){
   try {
     if (!window.matchMedia || !matchMedia('(max-width: 760px)').matches) return;
-    var PARK_MS = 45000;  // show fully for ~45s, then park to the edge
+    var PARK_MS = 4000;  // show fully for ~4s, then park to the edge
     function wire(panel){
       if (!panel || panel.__wrWired) return; panel.__wrWired = true;
       var timer = null;
