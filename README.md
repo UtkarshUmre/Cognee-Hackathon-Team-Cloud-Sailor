@@ -304,6 +304,41 @@ Real engineering is a sequence of "it works… but" moments. A few that shaped t
   blobs into Cognee — it's a *memory/knowledge-graph* layer for the case (clues, people,
   places). Faces stay local; if we productionized enrollment we'd use **Supabase pgvector**
   for embeddings. Using the right tool per job kept the "Best Use of Cognee" story clean.
+- **The face scanner saga — the right detector matters more than the model.** This one
+  cost us the most time, so it's worth documenting end-to-end:
+  - **Symptom:** enrollment worked, but every scan returned **"No face detected — access
+    denied,"** even sitting perfectly still, well-lit, face filling the frame.
+  - **False trails:** we assumed browser cache, then Render's ephemeral disk wiping the
+    enrolled face on each redeploy (real, but not the cause), then a too-strict match
+    threshold, then `DeepFace.find` silently pre-filtering non-matches to an empty result.
+    We even briefly made it "always grant," which we reverted — a demo that *looks* fake
+    when a judge tests a different face is worse than a slow one.
+  - **Root cause (found by reproducing locally):** the **OpenCV Haar detector** DeepFace
+    used by default **cannot reliably box a real webcam face** — it works on crisp images
+    but not live camera frames. So detection failed *before* any matching happened, and the
+    "no face" error surfaced as access denied. Same-face-vs-itself matched fine (distance
+    0.13 < 0.59) — proving the *matching* was never the problem, the *detection* was.
+  - **Fix 1 (works):** a **detector fallback chain** — try a detector, fall back to a more
+    robust one if it can't find a face, before ever denying.
+  - **Fix 2 (fast):** **RetinaFace** was robust but ~**10 s per scan** on CPU (a fixed cost —
+    shrinking the image didn't help), which froze the user. We swapped in **YuNet** as the
+    primary detector: **~50 ms** *and* robust on real faces. Final chain:
+    **YuNet → OpenCV → RetinaFace** (fast, with a reliable slow backstop). Detector weights
+    are **pre-baked into the Docker image** so there's no first-request download in the
+    cloud. Tunable live via the `FACE_DETECTORS` env var — no redeploy to re-order.
+  - **Lessons:** (1) with off-the-shelf CV, the **detector** is usually the weak link, not
+    the recognition model; (2) **reproduce locally with the exact library version** before
+    guessing — one local repro replaced a dozen blind deploys; (3) on ephemeral hosting,
+    **redeploys wipe runtime state** (our enrolled faces), which masqueraded as a code bug;
+    (4) don't "solve" a demo by faking success — keep it real (turn your head → still denies)
+    but make it *reliable and fast*.
+- **A camera left recording.** The webcam stream was started but never released, so the
+  recording light stayed on. Small but real: we added a Start/Stop toggle and auto-release
+  the camera after a successful scan and on page exit.
+- **Guard the good states with tags.** After several regressions (a stray "revert" wiped
+  the poster styling; the scanner broke and came back), we started dropping **git tags** at
+  each confirmed-working milestone (`good-demo-*`) so any regression is a one-command
+  rollback. Cheap insurance during a fast, iterative crunch.
 
 ## 🧹 After the hackathon (site teardown)
 
