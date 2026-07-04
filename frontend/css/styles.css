@@ -295,7 +295,7 @@ textarea:focus, input:focus, select:focus {
 .t-hang {
   font-family: "Anton", sans-serif; font-size: clamp(48px, 11vw, 150px); letter-spacing: 1px;
   color: #fff; text-shadow: 0 0 30px rgba(255,61,139,0.6), 0 4px 0 #2a1020;
-  -webkit-text-stroke: 2px rgba(255,196,60,0.55);
+  -webkit-text-stroke: 2px rgba(255,61,139,0.35);   /* Option B: soft all-pink edge (no gold) */
 }
 .t-part {
   font-family: "Bebas Neue"; font-size: clamp(16px, 2.2vw, 27px); letter-spacing: 8px;
