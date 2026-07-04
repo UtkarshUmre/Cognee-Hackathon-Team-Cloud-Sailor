@@ -100,17 +100,6 @@ def rate_limit(request: Request) -> None:
         _rate_hits[ip] = hits
 
 
-@app.on_event("startup")
-def _warm_face_model() -> None:
-    """Preload the DeepFace model in a background thread so the first face scan
-    isn't slowed by loading the model into RAM. Non-blocking; boot stays fast."""
-    import threading
-
-    from . import face_gate
-
-    threading.Thread(target=face_gate.warm_up, daemon=True).start()
-
-
 # -- lazy singletons ---------------------------------------------------------
 @lru_cache(maxsize=1)
 def get_cognee() -> CogneeClient:
@@ -348,7 +337,6 @@ def auth_status() -> dict:
     return {
         "available": face_gate.is_available(),
         "enrolled": face_gate.enrolled_names(),
-        "warm": face_gate.is_warm(),
     }
 
 

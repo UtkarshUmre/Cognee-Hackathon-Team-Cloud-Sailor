@@ -47,39 +47,6 @@ def is_available() -> bool:
         return False
 
 
-_warmed = False
-
-
-def warm_up() -> bool:
-    """Load the SFace model + detector into RAM once, at startup.
-
-    This moves the heavy one-time cost (TensorFlow import + model build) off the
-    user's first scan and onto server boot, so live scans are fast. Safe to call
-    from a background thread; no-ops if deps are missing.
-    """
-    global _warmed
-    if _warmed or not is_available():
-        return _warmed
-    try:
-        import numpy as np
-        from deepface import DeepFace
-
-        blank = np.zeros((160, 160, 3), dtype="uint8")
-        # build_model caches the network; represent + extract_faces prime the
-        # recognition model and the OpenCV detector respectively.
-        DeepFace.represent(
-            blank, model_name=MODEL_NAME, detector_backend="skip", enforce_detection=False
-        )
-        _warmed = True
-    except Exception:  # noqa: BLE001 — warmup is best-effort
-        pass
-    return _warmed
-
-
-def is_warm() -> bool:
-    return _warmed
-
-
 def enrolled_names() -> list[str]:
     if not GALLERY.is_dir():
         return []
@@ -112,28 +79,14 @@ def _clear_cache() -> None:
             pkl.unlink(missing_ok=True)
 
 
-# Shown whenever a face can't be detected — same advice for enroll and verify.
-FACE_TIPS = (
-    "Look straight at the camera, keep your head level (don't tilt or turn), "
-    "remove glasses/hat, and make sure your face is well-lit and fills the frame."
-)
-
-
 def enroll(name: str, data_url: str) -> str:
-    """Save a webcam frame as an authorized face. Returns the stored file name.
-
-    Enrollment is intentionally lenient: we save the frame even if the (weak)
-    OpenCV detector can't box a face in it — glasses, distance, or a slight angle
-    routinely defeat that detector, and blocking enrollment on it caused false
-    "no clear face detected" failures. The verify step still does the real
-    matching, and the on-screen tips guide users toward a clean shot.
-    """
+    """Save a webcam frame as an authorized face. Returns the stored file name."""
     import cv2
 
     if not is_available():
         raise FaceGateError("DeepFace/OpenCV not installed yet.")
-    img = _decode_dataurl(data_url)
     safe = "".join(c for c in name.strip() if c.isalnum() or c in ("-", "_")) or "operative"
+    img = _decode_dataurl(data_url)
     GALLERY.mkdir(parents=True, exist_ok=True)
     out = GALLERY / f"{safe}.jpg"
     if not cv2.imwrite(str(out), img):
@@ -152,27 +105,18 @@ def verify(data_url: str) -> VerifyResult:
     from deepface import DeepFace
 
     img = _decode_dataurl(data_url)
-
-    def _find(enforce: bool):
-        return DeepFace.find(
+    try:
+        results = DeepFace.find(
             img_path=img,
             db_path=str(GALLERY),
             model_name=MODEL_NAME,
             detector_backend=DETECTOR,
-            enforce_detection=enforce,
+            enforce_detection=True,
             silent=True,
         )
-
-    # Try strict detection first (best precision). If DeepFace can't box a face
-    # in the probe OR in an enrolled reference (glasses/distance/angle), it raises
-    # — so we fall back to a lenient match instead of dead-ending the scan.
-    try:
-        results = _find(True)
-    except Exception:  # noqa: BLE001
-        try:
-            results = _find(False)
-        except Exception:  # noqa: BLE001
-            return VerifyResult(False, None, None, None, f"Couldn't read the frame. {FACE_TIPS}")
+    except ValueError as e:
+        # DeepFace raises ValueError when it can't detect a face.
+        return VerifyResult(False, None, None, None, "No face detected — look at the camera.")
 
     # results is a list of DataFrames (one per detected face); take the best row.
     best = None
@@ -193,5 +137,5 @@ def verify(data_url: str) -> VerifyResult:
         identity=name if granted else None,
         distance=round(distance, 4),
         threshold=round(threshold, 4) if threshold else None,
-        reason="Access granted." if granted else f"Face not recognized. {FACE_TIPS}",
+        reason="Access granted." if granted else "Face not recognized.",
     )
