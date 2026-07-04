@@ -106,7 +106,8 @@ Wolfpack Recall
 │                                weights baked into the Docker image at build time,
 │                                run on our own server ................... FREE · $0/scan · no API
 ├─ Page-5 help chat ............ built-in guide + optional Puter.js AI ... user-pays → $0 to us
-└─ Hosting ..................... Docker on Render ........................ free/hobby-tier friendly
+└─ Hosting ..................... Docker on Render — Standard (2 GB RAM) ... PAID tier (needs 2 GB for
+                                 DeepFace/TensorFlow; free tier's 512 MB can't fit it)
 
 Backend  FastAPI (backend/api.py · wolfpack.py · cognee_client.py · face_gate.py · video_gen.py)
 Frontend vanilla JS · vis-network · CSS tokens        Secrets  .env (git-ignored, server-side only)
@@ -117,9 +118,11 @@ Frontend vanilla JS · vis-network · CSS tokens        Secrets  .env (git-ignor
 > recognition (open-source models **downloaded into the Docker image**, run locally — **$0
 > per scan, no paid API**), **FLUX** + **Omni-Video-Factory** (free Hugging Face Spaces),
 > **edge-tts** (free, keyless), and the **Puter** help chat (user-pays → $0 to us). The
-> **only** paid pieces are the owner's **Claude** calls (rate-limited + cheap Haiku in prod)
-> and the one-time **fal.ai** lip-sync used to pre-render the founder clips — everything
-> else costs nothing to run.
+> paid pieces are: **hosting** (Render's **Standard** plan — the free tier's 512 MB can't
+> fit DeepFace/TensorFlow, which needs ~2 GB), the owner's **Claude** calls (rate-limited +
+> cheap Haiku in prod), and the one-time **fal.ai** lip-sync used to pre-render the founder
+> clips. Everything else costs nothing to run — and the hosting cost ends when the demo is
+> taken down after judging (the code stays free to self-host).
 
 ### 3) Cognee tree — how we exercise it across its whole surface
 
