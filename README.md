@@ -2,18 +2,13 @@
 
 > **"Build AI that doesn't forget."** — Cognee × WeMakeDevs Hackathon · **Team Cloud Sailor**
 
-## 🎬 Watch this first — 3-minute demo
-
-[![Wolfpack Recall — 3-minute demo on YouTube](https://img.youtube.com/vi/FpbnOEEdB6k/maxresdefault.jpg)](https://www.youtube.com/watch?v=FpbnOEEdB6k)
-
-**▶ [Watch the full 3-minute demo on YouTube](https://www.youtube.com/watch?v=FpbnOEEdB6k)** —
-the complete walkthrough of the app. **Judges: start here.**
 
 Want the deep dive?
+## 🎬 Watch this first
 
 [![Wolfpack Recall — 8-minute walkthrough on YouTube](https://img.youtube.com/vi/XFumSmoaQd0/maxresdefault.jpg)](https://www.youtube.com/watch?v=XFumSmoaQd0)
 
-**▶ [Watch the full 8-minute walkthrough](https://www.youtube.com/watch?v=XFumSmoaQd0)** —
+**▶ [Watch the full walkthrough](https://www.youtube.com/watch?v=XFumSmoaQd0)** —
 the extended, end-to-end tour of every page and feature.
 
 ## 🎬 Watch the trailer
